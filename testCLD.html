@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <style>
+
+    .link {
+      stroke: lightgrey;
+    }
+
+    .dominantLoop {
+      stroke: black;
+
+    }
+
+
+
+
+
+
+    </style>
+
+    <title>Hello, world!</title>
+  </head>
+  <body>
+    <div class = "container">
+      <div id = "content" class = "mt-5">
+        <h1 class = "text-center">Test for CLD</h1>
+        <button id = "bPlay" type="button" class="d-block btn btn-danger">Play</button>
+      </div>
+
+
+    </div>
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS, then D3 JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script type="text/javascript">
+    var w = 960;
+    var h = 800;
+
+    var svg = d3.select('#content')
+                .append('svg')
+                .attr('height', h)
+                .attr('width', w);
+
+    defs = svg.append("svg:defs").append("svg:marker")
+             .attr("id", "arrowhead")
+             .attr("refX", 6)
+             .attr("refY", 6)
+             .attr("markerWidth", 30)
+             .attr("markerHeight", 30)
+             .attr("orient", "auto")
+             .append("path")
+             .attr("d", "M 0 0 12 6 0 12 3 6")
+             .style("fill", "grey");
+
+    var dataset = {
+      nodes: [{"id":0,"variable":"Susceptible","x":15,"y":500,"type":"stock"},{"id":1,"variable":"Contact Probability","x":15,"y":300,"type":"auxiliary"},{"id":2,"variable":"Total Population","x":10,"y":200,"type":"auxiliary"},{"id":3,"variable":"Infectivity","x":122.5,"y":200,"type":"auxiliary"},{"id":4,"variable":"Infection rate","x":90,"y":600,"type":"flow"},{"id":5,"variable":"Infected","x":165,"y":500,"type":"stock"},{"id":6,"variable":"Recovery rate","x":240,"y":600,"type":"flow"},{"id":7,"variable":"Recovery delay","x":235,"y":700,"type":"auxiliary"},{"id":8,"variable":"Recovered","x":315,"y":500,"type":"stock"},{"id":9,"variable":"Contacts per infected","x":185,"y":400,"type":"auxiliary"},{"id":10,"variable":"Effective contacts per infected","x":127.5,"y":300,"type":"auxiliary"},{"id":11,"variable":"Contact rate","x":350,"y":330,"type":"auxiliary"}],
+      edges: [
+        {source: 0, target: 1, fb : "B1"},
+        {source: 2, target: 1, fb :""},
+        {source: 1, target: 4, fb : "B1"},
+        {source: 4, target: 0, fb : "B1"},
+        {source: 4, target: 5, fb : "R1"},
+        {source: 10, target: 4, fb : "R1"},
+        {source: 3, target: 10, fb : ""},
+        {source: 9, target: 10, fb : "R1"},
+        {source: 5, target: 9, fb : "R1"},
+        {source: 5, target: 6, fb : "B2"},
+        {source: 6, target: 5, fb : "B2"},
+        {source: 7, target: 6, fb : ""},
+        {source: 6, target: 8, fb : ""},
+        {source: 11, target: 9, fb : ""}
+      ]
+    }
+
+    var colors = d3.scaleOrdinal(d3.schemeCategory10);
+
+
+
+    svg.selectAll('line')
+       .data(dataset.edges)
+       .enter()
+       .append('line')
+       .attr("marker-end", "url(#arrowhead)")
+       .attr("x1", d => {
+         const x0 = dataset.nodes[d.source].x;
+         const x1 = dataset.nodes[d.target].x;
+         const deltaX = dataset.nodes[d.target].x - dataset.nodes[d.source].x;
+         const lengthX = Math.abs(deltaX);
+         const lengthY = Math.abs(dataset.nodes[d.target].y - dataset.nodes[d.source].y);
+         const hypotenuse = Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2));
+         const offsetX = (10 * lengthX) / hypotenuse;
+         let x2;
+         if(x0 > x1){
+           x2  = x0 - offsetX;
+         } else {
+           x2 = x0 + offsetX;
+         }
+         return (x2);
+       })
+       .attr("y1", d => {
+         const deltaY = dataset.nodes[d.target].y - dataset.nodes[d.source].y;
+         const y0 = dataset.nodes[d.source].y;
+         const y1 = dataset.nodes[d.target].y;
+         const lengthY = Math.abs(deltaY);
+         const lengthX = Math.abs(dataset.nodes[d.target].x - dataset.nodes[d.source].x);
+         const hypotenuse = Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2));
+         const offsetY = (10 * lengthY) / hypotenuse ;
+         let x2;
+         if(y0 > y1){
+           y2  = y0 - offsetY;
+         } else {
+           y2 = y0 + offsetY;
+         }
+         return (y2);
+       })
+       .attr("x2", (d, i) => {
+         const x1 = dataset.nodes[d.target].x;
+         const x0 = dataset.nodes[d.source].x;
+         const deltaX = dataset.nodes[d.target].x - dataset.nodes[d.source].x;
+         const lengthX = Math.abs(deltaX);
+         const lengthY = Math.abs(dataset.nodes[d.target].y - dataset.nodes[d.source].y);
+         const hypotenuse = Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2));
+         const offsetX = (16 * lengthX) / hypotenuse ;
+         let x2;
+         if(x0 > x1){
+           x2  = x1 + offsetX;
+         } else {
+           x2 = x1 - offsetX;
+         }
+         return (x2);
+       })
+       .attr("y2", d => {
+         const deltaY = dataset.nodes[d.target].y - dataset.nodes[d.source].y;
+         const y0 = dataset.nodes[d.source].y;
+         const y1 = dataset.nodes[d.target].y;
+         const lengthY = Math.abs(deltaY);
+         const lengthX = Math.abs(dataset.nodes[d.target].x - dataset.nodes[d.source].x);
+         const hypotenuse = Math.sqrt(Math.pow(lengthX, 2) + Math.pow(lengthY, 2));
+         const offsetY = (16 * lengthY) / hypotenuse ;
+         let x2;
+         if(y0 > y1){
+           y2  = y1 + offsetY;
+         } else {
+           y2 = y1 - offsetY;
+         }
+         return (y2);
+       })
+       .attr("class", "link");
+
+       var nodes = svg.selectAll('circle')
+         .data(dataset.nodes)
+         .enter()
+         .append('circle')
+         .attr("r", 10)
+         .attr("cx", d => {return d.x})
+         .attr("cy", d => {return d.y})
+         .attr("opacity", 0.2)
+         .style("fill", function(d,i) {
+            return colors(i);
+          })
+
+    nodes.append("title")
+      .text(d => {
+        return d.variable;
+      });
+
+    const constructRegExp = text => {
+      const vectorLoops = text.split(" ");
+      const length = vectorLoops.length;
+      let stringRegExp = "";
+      if (length === 1){
+        stringRegExp = vectorLoops[0];
+      }
+
+      if (length > 1){
+        for(let i = 0; i < length; i++){
+          if(i < length - 1){
+            stringRegExp += `${vectorLoops[i]}|`;
+          } else {
+            stringRegExp += `${vectorLoops[i]}`
+          }
+
+        }
+      }
+      console.log(`milu: ${stringRegExp}`);
+      return(stringRegExp)
+    }
+
+      d3.select('#bPlay')
+        .on('click', () => {
+          const milu = ["B1", "R1", "B2", "B1 B2"];
+          const coin = Math.round(Math.random() * 3);
+          const stringRegExp = constructRegExp(milu[coin]);
+          console.log(stringRegExp);
+          const patt = RegExp(stringRegExp);
+          d3.selectAll(".link")
+            .attr("class", d => {
+              const loops = d.fb;
+              const res = patt.test(loops);
+              let className;
+              if(res === true){
+                className = "link dominantLoop";
+              } else {
+                className = "link";
+              }
+              return(className);
+            });
+        });
+
+
+
+    </script>
+  </body>
+</html>
