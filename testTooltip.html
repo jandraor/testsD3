@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <style>
+
+    .tsLine {
+      fill: none;
+    }
+
+
+
+
+
+
+
+    </style>
+
+    <title>Hello, world!</title>
+  </head>
+  <body>
+    <div class = "container">
+      <div id = "content" class = "mt-5">
+        <h1 class = "text-center">Test for tooltip</h1>
+      </div>
+    </div>
+
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS, then D3 JS -->
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <script type="text/javascript">
+    var w = 960;
+    var h = 800;
+    var padding = 50
+
+    var svg = d3.select('#content')
+                .append('svg')
+                .attr('height', h)
+                .attr('width', w);
+
+    var dataset = [
+      {'x': 0, 'y': 0},
+      {'x': 0.5, 'y': 3},
+      {'x': 1, 'y': 1},
+      {'x': 2, 'y': 2},
+      {'x': 3, 'y': 5},
+      {'x': 4, 'y': 10},
+      {'x': 5, 'y': 5},
+      {'x': 6, 'y': 30},
+      {'x': 8, 'y': 100},
+      {'x': 9, 'y': 50}
+    ]
+
+    //Create custom bisector
+
+    var bisect = d3.bisector(d => { return d.x}).right;
+
+    var xScale = d3.scaleLinear()
+                   .domain([0, 9])
+                   .range([0 + padding, w - padding]);
+
+    var yScale = d3.scaleLinear()
+                   .domain([0, 100])
+                   .range([h - padding, 0 + padding]);
+
+    // Define X axis
+    var xAxis = d3.axisBottom()
+                  .scale(xScale);
+    // Define y axis
+    var yAxis = d3.axisLeft()
+                  .scale(yScale);
+
+    svg.append('clipPath')
+      .attr('id', 'chart-area')
+      .append('rect')
+      .attr('x', padding)
+      .attr('y', padding)
+      .attr('width', w - padding)
+      .attr('height', h - padding)
+
+    //Create x axis
+    svg.append('g')
+      .attr('class', 'x-axis')
+      .attr('transform', `translate(0, ${h - padding})`)
+      .call(xAxis);
+
+    //Create y axis
+    svg.append('g')
+      .attr('class', 'y-axis')
+      .attr('transform', `translate(${padding}, 0)`)
+      .call(yAxis);
+
+    var line = d3.line()
+                 .x(d => {return xScale(d.x);})
+                 .y(d => {return yScale(d.y)})
+    //             .curve(d3.curveBundle.beta(1));
+
+    var path = svg.append('path')
+                 .datum(dataset)
+                 .attr('id', 'line1')
+                 .attr('class', 'tsLine')
+                 .attr('d', line)
+                 .attr('stroke', 'steelblue');
+
+    var mouseG = svg.append('g')
+                   .attr('class', 'mouse-over-effects border')
+
+    mouseG.append('path')
+          .attr('class', 'mouse-line')
+          .style('stroke', 'black')
+          .style('stroke-width', '1px')
+          .style('opacity', 1)
+
+    mousePerLine = mouseG.append('g')
+                     .attr('class', 'border mouse-per-line');
+
+    mousePerLine.append('circle')
+      .attr('r', 7)
+      .style('stroke', 'steelblue')
+      .style('fill', 'none')
+      .style('stroke-width', '1px')
+      .style('opacity', '1')
+
+    mousePerLine.append('text')
+      .attr('transform', 'translate(10, 3)');
+
+    mouseG.append('rect')
+      .attr('width', w - 2 * padding)
+      .attr('height', h - 2 * padding)
+      .attr('x', padding)
+      .attr('y', padding)
+      .attr('opacity', 0)
+      .on('mouseout', () => {
+        d3.select('.mouse-line')
+          .style('opacity', '0');
+
+        d3.selectAll('.mouse-per-line circle')
+          .style('opacity', '0');
+      })
+      .on('mouseover', () =>  {
+        d3.select('.mouse-line')
+          .style('opacity', '1');
+
+        d3.selectAll('.mouse-per-line circle')
+          .style('opacity', '1');
+      })
+      .on('mousemove', function() {
+        var mouse = d3.mouse(this);
+        var datapoints = [
+          {'x': mouse[0], 'y': padding},
+          {'x': mouse[0], 'y': h - padding}
+        ]
+
+        var line = d3.line()
+                     .x(d => {return d.x})
+                     .y(d => {return d.y})
+
+        d3.select('.mouse-line')
+          .datum(datapoints)
+          .attr('d', line)
+
+        d3.select('.mouse-per-line')
+          .attr('transform', function() {
+            d3.selectAll('.mouse-per-line circle')
+              .attr('cx', mouse[0]);
+            var x0 = xScale.invert(mouse[0]);
+            var index = bisect(dataset, x0)
+            console.log(`index: ${index}`)
+            var startDatum = dataset[index - 1];
+            var endDatum = dataset[index];
+            var interpolate = d3.interpolateNumber(startDatum.y, endDatum.y)
+            var range = endDatum.x - startDatum.x;
+            var valueY = interpolate((x0 - startDatum.x) / range)
+            console.log(`valueY: ${valueY}, range: ${range}, x0: ${x0}`)
+
+            console.log(`This is x0: ${x0} & this is mouse0: ${mouse[0]}`);
+            d3.selectAll('.mouse-per-line circle')
+              .attr('cy', yScale(valueY));
+          } )
+      })
+
+
+
+
+
+
+
+    </script>
+  </body>
+</html>
